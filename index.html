@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Decision Board</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#5D5CDE">
+  <meta name="mobile-web-app-capable" content="yes">
+  <style>
+    :root { --color-primary: #5D5CDE; }
+    .theme-ocean { --color-primary: #0ea5e9; }
+    .theme-forest { --color-primary: #10b981; }
+    .theme-sunset { --color-primary: #f59e0b; }
+    .theme-lavender { --color-primary: #8b5cf6; }
+    .theme-coral { --color-primary: #f97316; }
+    .theme-teal { --color-primary: #14b8a6; }
+    .card-hover { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+    .card-hover:active { transform: translateY(0); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body class="bg-white dark:bg-gray-900 min-h-screen font-sans">
+  <header class="bg-primary text-white p-4 shadow-lg">
+    <div class="max-w-4xl mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-4">
+        <button id="backBtn" class="p-2 rounded-lg bg-white bg-opacity-20 hover:bg-opacity-30 hidden">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <h1 id="title" class="text-2xl font-bold">Decision Board</h1>
+      </div>
+      <div class="flex items-center space-x-3">
+        <span id="userNameDisplay" class="text-lg"></span>
+        <select id="themeSelector" class="p-2 rounded-lg bg-white bg-opacity-20 text-white text-sm focus:outline-none">
+          <option value="theme-default">🎨 Default</option>
+          <option value="theme-ocean">🌊 Ocean</option>
+          <option value="theme-forest">🌲 Forest</option>
+          <option value="theme-sunset">🌅 Sunset</option>
+          <option value="theme-lavender">💜 Lavender</option>
+          <option value="theme-coral">🪸 Coral</option>
+          <option value="theme-teal">🐢 Teal</option>
+        </select>
+        <button id="settingsBtn" class="p-2 rounded-lg bg-white bg-opacity-20 hover:bg-opacity-30">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+        </button>
+        <button id="addBtn" class="p-3 rounded-lg bg-white bg-opacity-20 hover:bg-opacity-30">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto p-4">
+    <nav id="breadcrumb" class="mb-6 text-lg">
+      <ol class="flex items-center space-x-2 text-gray-600 dark:text-gray-300"></ol>
+    </nav>
+    <div id="itemsGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+  </main>
+
+  <!-- Add / Edit Modal -->
+  <div id="addModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md">
+      <h2 id="modalTitle" class="text-2xl font-bold mb-6 text-center">Add New Item</h2>
+      <div id="passwordSection">
+        <label class="block text-lg mb-2">Enter Password:</label>
+        <input id="passwordInput" type="password" class="w-full p-3 border rounded mb-3" placeholder="Password">
+        <button id="passwordSubmit" class="w-full bg-primary text-white p-3 rounded">Continue</button>
+        <p id="forgotPwd" class="mt-2 text-sm text-blue-600 hover:underline cursor-pointer">Forgot password?</p>
+      </div>
+      <div id="addForm" class="hidden">
+        <label class="block mb-1">Name:</label>
+        <input id="itemName" type="text" class="w-full p-3 border rounded mb-4" placeholder="Name">
+        <label class="block mb-1">Picture:</label>
+        <input id="itemImage" type="file" accept="image/*" class="w-full mb-4">
+        <div id="imagePreview" class="hidden mb-4"><img class="w-20 h-20 object-cover rounded"></div>
+
+        <label class="block mb-1">Type:</label>
+        <select id="itemType" class="w-full p-3 border rounded mb-4">
+          <option value="category">Category</option>
+          <option value="item">Item</option>
+        </select>
+
+        <label class="block mb-1">Position:</label>
+        <select id="itemPosition" class="w-full p-3 border rounded mb-6">
+          <option value="end">Add to end</option>
+        </select>
+
+        <div class="flex space-x-2">
+          <button id="saveItem" class="flex-1 bg-primary text-white p-3 rounded">Save</button>
+          <button id="cancelAdd" class="flex-1 bg-gray-300 p-3 rounded">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md">
+      <h2 class="text-2xl font-bold mb-4 text-center">Settings</h2>
+      <div class="space-y-4">
+        <div>
+          <h3 class="font-semibold mb-2">Profile</h3>
+          <label class="block mb-1">Name:</label>
+          <input id="profileName" type="text" class="w-full p-3 border rounded mb-2">
+          <label class="block mb-1">Email:</label>
+          <input id="profileEmail" type="email" class="w-full p-3 border rounded mb-2">
+          <button id="saveProfile" class="w-full bg-primary text-white p-3 rounded mt-2">Save Profile</button>
+        </div>
+        <div>
+          <h3 class="font-semibold mb-2">Security</h3>
+          <label class="block mb-1">Current Password:</label>
+          <input id="currentPwd" type="password" class="w-full p-3 border rounded mb-2">
+          <label class="block mb-1">New Password:</label>
+          <input id="newPwd" type="password" class="w-full p-3 border rounded mb-2">
+          <label class="block mb-1">Security Question:</label>
+          <input id="secQuestion" type="text" class="w-full p-3 border rounded mb-2">
+          <label class="block mb-1">Answer:</label>
+          <input id="secAnswer" type="text" class="w-full p-3 border rounded mb-2">
+          <button id="saveSecurity" class="w-full bg-primary text-white p-3 rounded">Save Security</button>
+        </div>
+        <button id="closeSettings" class="w-full bg-gray-300 p-3 rounded">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Theme persistence
+      const themeSel = document.getElementById('themeSelector');
+      const savedTheme = localStorage.getItem('decisionTheme') || 'theme-default';
+      document.body.classList.add(savedTheme);
+      themeSel.value = savedTheme;
+      themeSel.addEventListener('change', e => {
+        document.body.classList.remove('theme-ocean','theme-forest','theme-sunset','theme-lavender','theme-coral','theme-teal');
+        if (e.target.value !== 'theme-default') document.body.classList.add(e.target.value);
+        localStorage.setItem('decisionTheme', e.target.value);
+      });
+
+      // Data seed or load
+      let raw = localStorage.getItem('decisionData');
+      window.data = raw ? JSON.parse(raw) : {
+        Food: { type:'category', image:'icons/icon-192.png', children:{
+          Fruits: { type:'category', image:'icons/icon-192.png', children:{
+            Apple:{ type:'item', image:'icons/icon-192.png' }
+          }}
+        }}
+      };
+      localStorage.setItem('decisionData', JSON.stringify(window.data));
+
+      window.currentPath = [];
+
+      function save() { localStorage.setItem('decisionData', JSON.stringify(window.data)); }
+      function speak(txt) { if ('speechSynthesis' in window) new SpeechSynthesisUtterance(txt).rate=0.8, speechSynthesis.speak(new SpeechSynthesisUtterance(txt)); }
+
+      function getData() {
+        let d = window.data;
+        for (let seg of window.currentPath) d = d[seg].children;
+        return d;
+      }
+
+      function updateBreadcrumb() {
+        const ol = document.querySelector('#breadcrumb ol');
+        ol.innerHTML = '';
+        const homeLi = document.createElement('li');
+        homeLi.innerHTML = '<button onclick="nav([])" class="text-primary">🏠 Home</button>';
+        ol.appendChild(homeLi);
+        window.currentPath.forEach((seg,i)=>{
+          const li = document.createElement('li');
+          li.innerHTML = '<span class="mx-2">›</span><button onclick='nav('+JSON.stringify(window.currentPath.slice(0,i+1))+')' class="text-primary">'+seg+'</button>';
+          ol.appendChild(li);
+        });
+      }
+
+      function render() {
+        const grid = document.getElementById('itemsGrid');
+        grid.innerHTML = '';
+        const d = getData();
+        Object.entries(d).forEach(([name,item])=>{
+          const card = document.createElement('div');
+          card.className='bg-white dark:bg-gray-800 p-4 rounded-xl shadow cursor-pointer card-hover relative';
+          card.innerHTML='<img src="'+item.image+'" class="w-16 h-16 mx-auto rounded mb-2"><div class="font-bold">'+name+'</div>';
+          card.onclick=()=>{ speak(name); if(item.type==='category'){ window.currentPath.push(name); updateUI(); }};
+          const del = document.createElement('button');
+          del.innerText='🗑️'; del.className='absolute top-2 right-2';
+          del.onclick=e=>{ e.stopPropagation();
+            const pw=prompt('Enter password');
+            const pass = localStorage.getItem('decisionPwd')||'admin123';
+            if(pw===pass){ delete d[name]; save(); updateUI(); } else alert('Wrong password');
+          };
+          card.appendChild(del);
+          grid.appendChild(card);
+        });
+      }
+
+      function updateUI() {
+        document.getElementById('title').innerText = window.currentPath.length?window.currentPath.slice(-1)[0]:'Decision Board';
+        document.getElementById('backBtn').classList.toggle('hidden',!window.currentPath.length);
+        updateBreadcrumb(); render();
+        document.getElementById('userNameDisplay').innerText = localStorage.getItem('decisionUserName')||'';
+      }
+
+      window.nav = p=>{ window.currentPath = p; updateUI(); };
+
+      document.getElementById('backBtn').addEventListener('click',()=>{ if(window.currentPath.length){ window.currentPath.pop(); updateUI(); }});
+
+      updateUI();
+    });
+  </script>
+</body>
+</html>
